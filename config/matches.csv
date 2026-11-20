@@ -950,6 +950,7 @@ address,name,size,status,match_percent,unit,evidence
 0x00452310,th08::ReplayManager::RecordInputAndFps,372,matching,100.00,replay-manager-record-input-and-fps,python3 scripts/compare-function.py replay-manager-record-input-and-fps --json
 0x00452490,th08::ReplayManager::ControlPlaybackFrameAdvance,184,matching,100.00,replay-manager-control-playback-frame-advance,python3 scripts/compare-function.py replay-manager-control-playback-frame-advance --json
 0x00452550,th08::ReplayManager::PlaybackInputAndFps,362,matching,100.00,replay-manager-playback-input-and-fps,python3 scripts/compare-function.py replay-manager-playback-input-and-fps --json
+0x004526C0,th08::ReplayManager::PlaybackExtendedInputAndFps,361,matching,100.00,replay-manager-playback-extended-input-and-fps,python3 scripts/compare-function.py replay-manager-playback-extended-input-and-fps --json
 0x00452830,th08::ReplayManager::BeginRecordingStage,1315,matching,100.00,replay-manager-begin-recording-stage,python3 scripts/compare-function.py replay-manager-begin-recording-stage --json
 0x00452D60,th08::ReplayManager::BeginPlaybackStage,787,matching,100.00,replay-manager-begin-playback-stage,python3 scripts/compare-function.py replay-manager-begin-playback-stage --json
 0x00453080,th08::ReplayManager::DeleteReplayManager,209,matching,100.00,replay-manager-delete-replay-manager,python3 scripts/compare-function.py replay-manager-delete-replay-manager --json

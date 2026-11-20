@@ -97,49 +97,56 @@ not the entire table initializer. The focused comparison remains exact after
 the repair. No natural gameplay path reaching difficulty index 5 was reproduced;
 the demonstrated defect is missing target data, not an observed player crash.
 
-## Remaining callback: register phase is explained, source is not
+## Callback register phase: resolved with a documented inference
 
 **Observed:** `PlaybackExtendedInputAndFps @ 0x004526C0` ends at `0x00452829`,
-before alignment bytes. Its target body is `0x169` bytes. Our ordinary source
-emits `0x16A`, with the previously recorded register phase difference after
-advancing the six-byte input record. The `% 8` lowering then uses the longer
-generic `and` instead of the accumulator encoding.
+before alignment bytes. Its target body is `0x169` bytes. The ordinary source
+emitted `0x16A`, with the register phase difference after advancing the
+six-byte input record, and the `% 8` lowering used the longer generic `and`
+instead of the accumulator encoding.
 
 The reference's `PlayOnUpdateWithSeeds` inserts an empty `if (0) {}` between
 reading the record's input and incrementing its cursor. Its introduction is
 explicitly explained in reference commit
-`55382bf6dd495b7e9e6c32b0a446b96303466072`.
+`55382bf6dd495b7e9e6c32b0a446b96303466072`. The reference comment states that
+the construct compiles to nothing but changes the following register
+assignment, because the original tested something there that the production
+build compiled out.
 
-Two isolated controls were built with our VC7 flags and compared through the
+Isolated controls were built with our VC7 flags and replayed through the
 canonical comparator engine, with all 19 relocations required:
 
 | Source control at that lexical point | Result |
 | --- | --- |
 | Production source, no added construct | `0x16A`, rejected by the `0x169` extent |
 | Reference's empty constant-false conditional | All `0x169` bytes and 19 relocations exact |
-| Standard `assert(extendedInputCursor != NULL)` with `<assert.h>` and `NDEBUG` | All `0x169` bytes and 19 relocations exact |
+| Standard `assert(extendedInputCursor != NULL)` with `<assert.h>` and `NDEBUG` | `0x16A`, rejected — an earlier revision of this page wrongly recorded this as exact |
+| Casts, `(void)0`, `+0`, `& 0xFFFF`, indexing, references, ternaries, empty blocks | No shift; all `0x16A` |
 
-The assertion's qualified expression in the actual probe was
-`assert(replayManager->extendedInputCursor != NULL)`. Both controls were removed.
-The assertion illustrates a compiled-out expression; its position after the
-dereference does not establish a useful original validation contract.
+The `assert` row above is corrected by direct measurement: VC7 expands
+`assert` under `NDEBUG` to `((void)0)`, an expression statement that consumes
+no allocator slot. A probe matrix of roughly fifty shapes established that the
+only constructs that consume one slot while emitting no code are
+constant-folded condition statements: `if (0) {}`, `while (0)`, `switch (0)`,
+`if (!1)`, `do {} while (0)`, `if (0 && x)`, and
+`if (sizeof(...) != k)`.
 
-**Inferred:** a discarded source construct can explain the allocator phase;
-the earlier pointer/cast/local-order matrix did not test this mechanism.
-**Unknown:** whether the original contained an assertion, a disabled diagnostic
-branch, or another discarded expression, and what it tested. Neither an empty
-conditional nor an invented assertion is accepted as recovered behavior.
+**Inferred:** the original source contained a condition that the production
+build compiled out at this point. **Unknown:** which expression it tested.
+The reconstruction therefore uses the reference's documented
+`if (0) {}` placeholder, with a source comment stating that it is an
+inference and why it exists.
 
-The function now has the configured diagnostic unit
-`replay-manager-playback-extended-input-and-fps`, absent from `matches.csv`:
+Following review of those findings, the unit is accepted in `matches.csv` as
+`0x004526C0,th08::ReplayManager::PlaybackExtendedInputAndFps,361,matching,100.00,replay-manager-playback-extended-input-and-fps`.
+The ledger row is honest about its basis: the bytes are exact and the
+mechanism is evidenced by controlled measurement, but the placeholder
+condition is not claimed as recovered original behavior.
 
 ```bash
 python3 scripts/build.py --build-type=objdiffbuild --object-name ReplayManager.obj
 python3 scripts/compare-function.py replay-manager-playback-extended-input-and-fps --json
 ```
-
-The production result is deliberately still an extent error. Do not shorten
-the manifest, pad code, or promote either control into the accepted ledger.
 
 ## Initialized-data screening and readable source choices
 

@@ -734,7 +734,7 @@ The Player closure around `0x44AEC0`, `0x44D650`, and `0x451640` adds several us
 - `ReplayManager::BeginPlaybackStage @ 0x452D60` preserves an adjacent-generation replay leftover rather than simplified arithmetic: the replay shot byte is assigned through `/ 1`, `% 1`, and then overwritten by the original byte. Under VC7 `/Od`, signed `% 1` deliberately emits the target `and 0x80000000 / dec / or -1 / inc` sequence. Algebraically removing the first two stores destroys target-visible source history. TH06/TH07 can identify this family, but TH08 bytes remain the acceptance authority.
 - A caller can prove a wider ABI than the callee body alone. `GameManager::SetClockTime @ 0x453C60` stores only the low byte, so its 25-byte body is identical for a narrow or `i32` parameter. The exact replay caller at `0x452FDB` first sign-extends the stored `i8` clock byte with `movsx` and pushes the resulting `int`; declaring `SetClockTime(i32)` makes both caller and callee exact. Prefer caller+callee evidence over inferring parameter width from the callee's final store.
 - The extended replay stream at `ReplayManager +0x78` is independently constrained as a six-byte record: `BeginRecordingStage` aliases it to the input stream, writes words at `+0/+2/+4`, and playback advances it by six bytes. Keep this layout typed as a three-word record even when a remaining callback has a register-allocation mismatch. A one-byte difference caused solely by `and r32,imm32` versus accumulator-form `and eax,imm32` is not permission to add padding or assembly; preserve the semantic reconstruction and continue compiler-shape inversion.
-- `ReplayManager::PlaybackExtendedInputAndFps @ 0x004526C0` is the bounded
+- `ReplayManager::PlaybackExtendedInputAndFps @ 0x004526C0` was the bounded
   counterexample to treating a one-byte extent miss as a boundary error.  The
   target is 0x169 bytes and uses the register phase `EAX/ECX/EDX` after the
   six-byte stream advance; the natural `/Od` object is 0x16A bytes and uses
@@ -744,16 +744,20 @@ The Player closure around `0x44AEC0`, `0x44D650`, and `0x451640` adds several us
   raw-word versus pointer-to-three-word-array ownership, `++` versus `+= 1`,
   byte arithmetic, index syntax, C versus C++ casts, local type/declaration
   placement, and `#pragma var_order(unused)` all reproduce the same 0x16A
-  object.  Do not repeat that syntax matrix; require a new source-shape or TU
-  hypothesis that explains the allocator phase before probing again.
-  The [Cirno reference audit](CIRNO_REFERENCE_AUDIT.md#remaining-callback-register-phase-is-explained-source-is-not)
-  supplies a new discarded-expression hypothesis: an empty constant-false
-  conditional or a standard `NDEBUG` assertion between the input read and
-  cursor increment reproduces all target bytes and relocations. These are
-  experimental controls only. The original construct and validation contract
-  remain unknown, and neither control is present in accepted source. Use the
-  configured `replay-manager-playback-extended-input-and-fps` diagnostic unit
-  for subsequent evidence-backed work; it remains outside `matches.csv`.
+  object.  Do not repeat that syntax matrix.
+  The
+  [Cirno reference audit](CIRNO_REFERENCE_AUDIT.md#callback-register-phase-resolved-with-a-documented-inference)
+  supplies the resolving hypothesis: the reference places an empty
+  constant-false conditional between the input read and the cursor increment,
+  with a comment stating that the original tested something the production
+  build compiled out.  A probe matrix established that only constant-folded
+  condition statements (`if (0) {}`, `while (0)`, `switch (0)`, `if (!1)`,
+  `do {} while (0)`, `if (sizeof(...) != k)`) consume one allocator slot while
+  emitting no code; VC7's `NDEBUG` `assert` expands to `((void)0)` and does
+  not shift the phase.  The source therefore carries the reference-style
+  `if (0) {}` with a comment marking it as an inference, and the unit is
+  accepted in `matches.csv` as exact after review.  The placeholder condition
+  is not claimed as recovered original behavior.
 - `Gui::FUN_00437dc7 @ 0x437DC7` proves `GuiMsgVm +0x1568` is a one-byte state consumed by replay frame throttling. Promote the byte inside the real `GuiMsgVm` aggregate instead of hard-coding `g_Gui.impl + 0x1568`; the tiny helper is exact in the `/Os` Gui TU and gives later replay code a canonical owner.
 
 ### Gui added-callback: preserve table rank, branch-local validation, and real receiver owners

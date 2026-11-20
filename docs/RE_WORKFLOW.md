@@ -152,10 +152,12 @@ full canonical byte comparison.
 
 ## Current phase selection
 
-Authored source is present for the complete authored inventory. The current
-ledger contains 1,106 accepted exact units and one authored near match,
-`ReplayManager::PlaybackExtendedInputAndFps @ 0x004526C0`, outside the accepted
-ledger. A configured unit is not by itself an accepted result; live counts
+Authored source is present for the complete authored inventory, and every
+authored function now has an accepted exact comparison (1,107 units). The last
+one, `ReplayManager::PlaybackExtendedInputAndFps @ 0x004526C0`, carries a
+documented `if (0) {}` inference; see
+[the reference audit](CIRNO_REFERENCE_AUDIT.md#callback-register-phase-resolved-with-a-documented-inference).
+A configured unit is not by itself an accepted result; live counts
 come from `scripts/analysis/report-reconstruction-status.py` and
 `config/matches.csv`, not this prose.
 

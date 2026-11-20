@@ -4924,3 +4924,33 @@ callback in the real chain and removes it through `Spellcard::CutChain`.
 The full retail replay now agrees through 37,016 calculations, including the
 complete first two stages; its later independent score divergence is tracked
 in [RT-011](RUNTIME_ISSUES.md#rt-011). The complete route suite is still running.
+
+### Extended replay callback allocator residual — 2026-11-20
+
+Scope: `ReplayManager::PlaybackExtendedInputAndFps @ 0x004526C0`,
+`src/ReplayManager.cpp`.
+
+Observed: the shipped body is 361 bytes; the natural source emitted 362. The
+difference was one allocator slot between the six-byte record read and the
+cursor advance, which changed the later `% 8` lowering from accumulator-form
+`and eax,0x80000007` to generic `and edx,0x80000007`. A probe matrix built
+with the pinned VC7 `/Od` flags across roughly fifty source shapes showed that
+casts, `(void)0`, `+0`, masks, index syntax, references, ternaries and empty
+blocks never shift the phase, and that VC7's `NDEBUG` `assert` expands to
+`((void)0)` and does not shift it either. Only compile-time-false condition
+statements (`if (0) {}`, `while (0)`, `switch (0)`, `if (!1)`,
+`do {} while (0)`, `if (sizeof(...) != k)`) consume one slot while emitting no
+code.
+
+Inferred: the original source tested a condition here that the production
+build compiled out. The tested expression remains unknown. The reconstruction
+uses the reference's `if (0) {}` with a source comment marking it as an
+inference, following the same documented approach as the reference's
+`PlayOnUpdateWithSeeds`.
+
+VC7 oracle: the configured diagnostic unit reproduced 361 / 361 bytes and all
+19 relocations, and is now accepted in `config/matches.csv`. The required
+single-job cold `verify-exact-units.py --all` replay passed **1,107 / 1,107**
+accepted authored units with zero failures. Earlier revisions of
+`CIRNO_REFERENCE_AUDIT.md` recorded the `NDEBUG` assert control as exact; that
+measurement was wrong and the page now records the reproduced `0x16A` result.

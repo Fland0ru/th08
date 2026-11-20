@@ -386,6 +386,10 @@ ChainCallbackResult ReplayManager::PlaybackExtendedInputAndFps(ReplayManager *re
     unused = 0;
     g_GuiMessageInputPrevious = g_GuiMessageInputCurrent;
     g_GuiMessageInputCurrent = replayManager->extendedInputCursor->input;
+    // The shipped body consumes one extra allocator slot between this read and
+    // the six-byte advance; only a compile-time-false condition reproduces it,
+    // so the original tested something here that the production build dropped.
+    if (0) {}
     replayManager->extendedInputCursor++;
 
     g_IsEighthFrameOfHeldInput = 0;

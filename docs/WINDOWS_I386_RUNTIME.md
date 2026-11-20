@@ -95,7 +95,7 @@ python3 scripts/analysis/verify-exact-units.py --all --json \
   > build/accepted-unit-replay.json
 ```
 
-Require `result: exact`, `checked: 1106`, `exact: 1106`, and no failures for
+Require `result: exact`, `checked: 1107`, `exact: 1107`, and no failures for
 the recorded checkpoint. Those counts are a snapshot; later contributors must
 use the live ledgers rather than hard-code them into tools.
 

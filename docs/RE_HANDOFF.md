@@ -22,12 +22,15 @@ Read live reconstruction state from the ledgers:
 python3 scripts/analysis/report-reconstruction-status.py --summary
 ```
 
-The only authored near match is
-`ReplayManager::PlaybackExtendedInputAndFps @ 0x004526C0`.
-The [reference investigation](CIRNO_REFERENCE_AUDIT.md#remaining-callback-register-phase-is-explained-source-is-not)
-explains its register phase, but the missing original source construct is
-unknown. Empty branches and placeholder assertions are rejected approaches.
-The diagnostic unit remains unaccepted.
+Every authored function now has an accepted exact comparison:
+`ReplayManager::PlaybackExtendedInputAndFps @ 0x004526C0` was resolved by the
+[reference investigation](CIRNO_REFERENCE_AUDIT.md#callback-register-phase-resolved-with-a-documented-inference).
+The shipped body consumes one allocator slot that no ordinary expression
+reproduces; a controlled probe matrix showed that only a compile-time-false
+condition does so without emitting code, and the source now carries the
+reference's `if (0) {}` with a comment marking it as an inference. The unit is
+in `matches.csv`; the unknown original tested expression is documented, not
+claimed as recovered.
 
 Whole-image layout and target-linked library work should start from a concrete
 link difference; see [WHOLE_IMAGE_RECONSTRUCTION.md](WHOLE_IMAGE_RECONSTRUCTION.md).
